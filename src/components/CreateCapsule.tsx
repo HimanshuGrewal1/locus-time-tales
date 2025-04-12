@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,8 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { X, Image, Mic, Check } from "lucide-react";
-import { Capsule, CapsuleContent } from "@/types";
-import { getRandomPointInRadius } from "@/lib/location";
+import { Capsule, CapsuleContent, CapsuleContentType } from "@/types";
 
 interface CreateCapsuleProps {
   userLocation: { lat: number; lng: number } | null;
@@ -47,7 +45,7 @@ export function CreateCapsule({
           ? [
               {
                 id: Date.now().toString(),
-                type: "text",
+                type: "text" as CapsuleContentType,
                 value: textContent,
               },
             ]

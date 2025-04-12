@@ -4,24 +4,30 @@ declare global {
   interface Window {
     google: {
       maps: {
-        Map: typeof google.maps.Map;
-        Marker: typeof google.maps.Marker;
-        InfoWindow: typeof google.maps.InfoWindow;
-        LatLng: typeof google.maps.LatLng;
+        Map: any;
+        Marker: any;
+        InfoWindow: any;
+        LatLng: any;
         MapTypeId: {
           ROADMAP: string;
           SATELLITE: string;
           HYBRID: string;
           TERRAIN: string;
         };
-        Circle: typeof google.maps.Circle;
+        Circle: any;
+        SymbolPath: {
+          CIRCLE: number;
+          BACKWARD_CLOSED_ARROW: number;
+          FORWARD_CLOSED_ARROW: number;
+        };
         event: {
           addListener: (
             instance: any,
             eventName: string,
             handler: Function
-          ) => google.maps.MapsEventListener;
+          ) => any;
         };
+        MapsEventListener: any;
       };
     };
   }

@@ -37,6 +37,12 @@ export const getCurrentPosition = (): Promise<GeolocationPosition> => {
         const mockPosition: GeolocationPosition = {
           coords: mockCoords,
           timestamp: Date.now(),
+          toJSON: function() {
+            return {
+              coords: this.coords,
+              timestamp: this.timestamp
+            };
+          }
         };
         
         resolve(mockPosition);
@@ -92,4 +98,36 @@ export const isWithinRadius = (
 ): boolean => {
   const distance = calculateDistance(userLat, userLng, targetLat, targetLng);
   return distance <= radiusMeters;
+};
+
+/**
+ * Generates a random point within a specified radius of a center point
+ * @param centerLat Center latitude
+ * @param centerLng Center longitude
+ * @param radiusMeters Radius in meters
+ * @returns Object with lat and lng properties
+ */
+export const getRandomPointInRadius = (
+  centerLat: number,
+  centerLng: number,
+  radiusMeters: number
+): { lat: number; lng: number } => {
+  // Convert radius from meters to degrees (approximate)
+  const radiusInDegrees = radiusMeters / 111000;
+  
+  // Generate random angle in radians
+  const randomAngle = Math.random() * Math.PI * 2;
+  
+  // Generate random radius (use square root for even distribution)
+  const randomRadius = Math.sqrt(Math.random()) * radiusInDegrees;
+  
+  // Calculate offsets
+  const latOffset = randomRadius * Math.sin(randomAngle);
+  const lngOffset = randomRadius * Math.cos(randomAngle) / Math.cos(centerLat * Math.PI / 180);
+  
+  // Return new coordinates
+  return {
+    lat: centerLat + latOffset,
+    lng: centerLng + lngOffset,
+  };
 };

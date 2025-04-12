@@ -1,137 +1,95 @@
 
-// Location utilities for the app
+// Mock implementation for getCurrentPosition
+// In a real app, this would use the browser's Geolocation API
 
-// Calculate distance between two coordinates in meters
-export function getDistanceBetweenCoordinates(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number
-): number {
-  const R = 6371e3; // Earth's radius in meters
-  const φ1 = (lat1 * Math.PI) / 180;
-  const φ2 = (lat2 * Math.PI) / 180;
-  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
-  const Δλ = ((lon2 - lon1) * Math.PI) / 180;
-
-  const a =
-    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-  return R * c;
-}
-
-// Check if user is within radius of a capsule
-export function isWithinRadius(
-  userLat: number,
-  userLng: number,
-  capsuleLat: number,
-  capsuleLng: number,
-  radiusMeters: number
-): boolean {
-  const distance = getDistanceBetweenCoordinates(
-    userLat,
-    userLng,
-    capsuleLat,
-    capsuleLng
-  );
-  return distance <= radiusMeters;
-}
-
-// Generate a random point within a radius for demo purposes
-export function getRandomPointInRadius(
-  centerLat: number,
-  centerLng: number,
-  radiusMeters: number
-): { lat: number; lng: number } {
-  // Convert radius from meters to degrees (approximate)
-  const radiusLat = radiusMeters / 111000; // 1 degree latitude is approx 111km
-  const radiusLng =
-    radiusMeters / (111000 * Math.cos((centerLat * Math.PI) / 180)); // Adjust for longitude
-
-  // Generate random point
-  const randomAngle = Math.random() * 2 * Math.PI;
-  const randomRadius = Math.sqrt(Math.random()) * radiusMeters;
-
-  const offsetLat = (randomRadius * Math.cos(randomAngle)) / 111000;
-  const offsetLng =
-    (randomRadius * Math.sin(randomAngle)) /
-    (111000 * Math.cos((centerLat * Math.PI) / 180));
-
-  return {
-    lat: centerLat + offsetLat,
-    lng: centerLng + offsetLng,
-  };
-}
-
-// Mock getting user's current location for development
-export function mockCurrentLocation(): Promise<GeolocationPosition> {
-  // Return a Promise to simulate the geolocation API
-  return new Promise((resolve) => {
-    // Simulate a delay
-    setTimeout(() => {
-      // Default to a location (can be anything for demo)
-      const mockPosition: GeolocationPosition = {
-        coords: {
-          latitude: 37.7749,
+/**
+ * Gets the current position of the user
+ * @returns Promise that resolves with a GeolocationPosition object
+ */
+export const getCurrentPosition = (): Promise<GeolocationPosition> => {
+  return new Promise((resolve, reject) => {
+    if (typeof navigator !== 'undefined' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(resolve, reject);
+    } else {
+      // For development/testing, return a mock position
+      setTimeout(() => {
+        const mockCoords: GeolocationCoordinates = {
+          latitude: 37.7749, // San Francisco
           longitude: -122.4194,
           accuracy: 10,
           altitude: null,
           altitudeAccuracy: null,
           heading: null,
           speed: null,
-        },
-        timestamp: Date.now(),
-      };
-      resolve(mockPosition);
-    }, 500);
+          toJSON: function() {
+            return {
+              latitude: this.latitude,
+              longitude: this.longitude,
+              accuracy: this.accuracy,
+              altitude: this.altitude,
+              altitudeAccuracy: this.altitudeAccuracy,
+              heading: this.heading,
+              speed: this.speed
+            };
+          }
+        };
+        
+        const mockPosition: GeolocationPosition = {
+          coords: mockCoords,
+          timestamp: Date.now(),
+        };
+        
+        resolve(mockPosition);
+      }, 100);
+    }
   });
-}
+};
 
-// Get the user's current position
-export function getCurrentPosition(): Promise<GeolocationPosition> {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error("Geolocation is not supported by this browser"));
-      return;
-    }
+/**
+ * Calculates the distance in meters between two coordinates
+ * @param lat1 Latitude of point 1
+ * @param lng1 Longitude of point 1
+ * @param lat2 Latitude of point 2
+ * @param lng2 Longitude of point 2
+ * @returns Distance in meters
+ */
+export const calculateDistance = (
+  lat1: number,
+  lng1: number,
+  lat2: number,
+  lng2: number
+): number => {
+  const R = 6371e3; // Earth's radius in meters
+  const φ1 = (lat1 * Math.PI) / 180;
+  const φ2 = (lat2 * Math.PI) / 180;
+  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+  const Δλ = ((lng2 - lng1) * Math.PI) / 180;
 
-    navigator.geolocation.getCurrentPosition(resolve, reject, {
-      enableHighAccuracy: true,
-      timeout: 5000,
-      maximumAge: 0,
-    });
-  });
-}
+  const a =
+    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const d = R * c;
 
-// Monitor the user's position for changes
-export function watchPosition(
-  onPositionChange: (position: GeolocationPosition) => void,
-  onError?: (error: GeolocationPositionError) => void
-): () => void {
-  if (!navigator.geolocation) {
-    if (onError) {
-      onError({
-        code: 0,
-        message: "Geolocation is not supported by this browser",
-        PERMISSION_DENIED: 1,
-        POSITION_UNAVAILABLE: 2,
-        TIMEOUT: 3,
-      });
-    }
-    return () => {};
-  }
+  return d;
+};
 
-  const watchId = navigator.geolocation.watchPosition(
-    onPositionChange,
-    onError,
-    {
-      enableHighAccuracy: true,
-      timeout: 5000,
-      maximumAge: 0,
-    }
-  );
-
-  return () => navigator.geolocation.clearWatch(watchId);
-}
+/**
+ * Checks if the user is within a specified radius of a location
+ * @param userLat User latitude
+ * @param userLng User longitude
+ * @param targetLat Target location latitude
+ * @param targetLng Target location longitude
+ * @param radiusMeters Radius in meters
+ * @returns Boolean indicating if user is within the radius
+ */
+export const isWithinRadius = (
+  userLat: number,
+  userLng: number,
+  targetLat: number,
+  targetLng: number,
+  radiusMeters: number
+): boolean => {
+  const distance = calculateDistance(userLat, userLng, targetLat, targetLng);
+  return distance <= radiusMeters;
+};

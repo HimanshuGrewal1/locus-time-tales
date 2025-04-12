@@ -7,10 +7,11 @@ import { CapsuleDetails } from "@/components/CapsuleDetails";
 import { CreateCapsule } from "@/components/CreateCapsule";
 import { LocalChat } from "@/components/LocalChat";
 import { Button } from "@/components/ui/button";
-import { Plus, MessageSquare, Info } from "lucide-react";
+import { Plus, MessageSquare, MapPin, Camera } from "lucide-react";
 import { Capsule } from "@/types";
 import { getCurrentPosition } from "@/lib/location";
 import { generateMockCapsules, currentUser } from "@/data/mockData";
+import { useAuth } from "@/context/AuthContext";
 import { 
   Dialog, 
   DialogContent, 
@@ -27,6 +28,7 @@ const Index = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
+  const { user } = useAuth();
 
   // Get the user's location and generate mock capsules
   useEffect(() => {
@@ -87,7 +89,7 @@ const Index = () => {
           {/* Local Chat */}
           <LocalChat
             locationId="area1" // In a real app, this would be location-based
-            currentUser={currentUser}
+            currentUser={user || currentUser}
             isOpen={isChatOpen}
             onClose={() => setIsChatOpen(false)}
           />
@@ -95,6 +97,12 @@ const Index = () => {
           {/* Create Capsule Dialog */}
           <Dialog open={isCreating} onOpenChange={setIsCreating}>
             <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Time Capsule</DialogTitle>
+                <DialogDescription>
+                  Create a digital time capsule at your current location that others can discover.
+                </DialogDescription>
+              </DialogHeader>
               <CreateCapsule
                 userLocation={userLocation}
                 onClose={() => setIsCreating(false)}
@@ -182,36 +190,3 @@ const Index = () => {
 };
 
 export default Index;
-
-// Missing imports - added here
-const MapPin = ({ className }: { className?: string }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-    <circle cx="12" cy="10" r="3" />
-  </svg>
-);
-
-const Camera = ({ className }: { className?: string }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
-    <circle cx="12" cy="13" r="3" />
-  </svg>
-);
